@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html><head>
+	<meta http-equiv='X-UA-Compatible' content='IE=edge' />
+	<meta http-equiv='Content-Type' content='text/html;charset=UTF-8'/>
+	<title>test</title>
+
+	<script id='sap-ui-bootstrap' type='text/javascript'
+			src="https://sapui5.netweaver.ondemand.com/resources/sap-ui-core.js""
+		data-sap-ui-theme='sap_bluecrystal'
+		data-sap-ui-xx-bindingSyntax="complex"
+		data-sap-ui-libs='sap.m'></script>
+		<!-- add 'sap.ui.table' and/or other libraries if required -->
+	
+	<script>
+	
+		
+	// define the Service URL
+	var url = "/databinding/proxy/http/services.odata.org/V2/Northwind/Northwind.svc/";
+
+	// create an ODataModel from URL
+	var oDataModel = new sap.ui.model.odata.ODataModel(url, true);
+
+	var oList = new sap.m.List("masterList", {
+	    headerText: "All Suppliers",
+	    mode: "SingleSelectMaster",
+	    growingThreshold: 5,
+	    growing: true,
+	    showNoData: true,
+	    items: {
+	        path: "/Suppliers",
+	        sorter: new sap.ui.model.Sorter("CompanyName"),
+	        template: new sap.m.StandardListItem({
+	            title: "{CompanyName}",
+	            description: "{Address}"
+	        }),
+
+	        parameters: {
+	            expand: "Products"
+	        }
+	    },
+	    select: function (evt) {
+	        //debugger;
+	        var context = evt.getParameter("listItem").getBindingContext();
+	        sap.ui.getCore().byId("detailList").setBindingContext(context);
+	    }
+	});
+	var oList2 = new sap.m.List("masterList2", {
+	    headerText: "All Products",
+	    mode: "SingleSelectMaster",
+	    growingThreshold: 5,
+	    growing: true,
+	    showNoData: true,
+	    items: {
+	        path: "sample>/results",
+	        sorter: new sap.ui.model.Sorter("ProductName"),
+	        template: new sap.m.StandardListItem({
+	            title: "{sample>ProductName}",
+	            description: "{sample>QuantityPerUnit}"
+	        }),
+
+	        parameters: {
+	            expand: "Products"
+	        }
+	    },
+	    select: function (evt) {
+	        //debugger;
+	        var context = evt.getParameter("listItem").getBindingContext();
+	        sap.ui.getCore().byId("detailList").setBindingContext(context);
+	    }
+	});
+
+	oList.setModel(oDataModel);
+	oList.placeAt("content");
+
+	//manually also you can make calls and bind data
+	var sPath = "/Products";
+	var mParameters = {};
+	mParameters.context = null;
+	mParameters.urlParameters = '$select=ProductName,QuantityPerUnit'; //ypu can pass url parameters like $filter/$select so on
+	//success handler
+	mParameters.success = function (response) {
+	        debugger;
+	        oList2.setModel(new sap.ui.model.json.JSONModel(response), "sample");
+	    }
+	    //error handler
+	mParameters.error = function (response) {
+	    alert("Odata call failed");
+	    console.log("Odata call failed");
+	}
+
+	oDataModel.read(sPath, mParameters);
+
+	oList2.placeAt("content");
+		
+	</script>
+
+</head>
+<body class='sapUiBody'>
+	<div id='content'></div>
+</body>
+</html>
