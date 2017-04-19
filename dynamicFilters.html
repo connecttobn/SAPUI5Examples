@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta http-equiv='X-UA-Compatible' content='IE=edge' />
+        <meta http-equiv='Content-Type' content='text/html;charset=UTF-8' />
+
+        <title>Dynamic Filter in XML view using HandleBars</title>
+
+        <script id='sap-ui-bootstrap' type='text/javascript' src='src="https://sapui5.netweaver.ondemand.com/resources/sap-ui-core.js"' data-sap-ui-theme='sap_bluecrystal' data-sap-ui-libs='sap.ui.commons' data-sap-ui-xx-bindingSyntax="complex"></script>
+
+        <!-- Table definition -->
+        <script id="view1" type="text/x-handlebars-template">
+            <mvc:View controllerName="sap.m.sample.Table.Table" xmlns:l="sap.ui.layout" xmlns:mvc="sap.ui.core.mvc" xmlns="sap.m">
+                <Table id="idProductsTable" inset="false" items="{
+      path: '/ProductCollection',
+      sorter: {
+        path: 'Name'
+      },
+      filters:[{
+      path: 'Category', 
+      operator: 'EQ',
+      value1: '{{dynamicFilter ProductCollection}}' 
+      }]
+    }">
+                    <headerToolbar>
+                        <Toolbar>
+                            <Label text="Products"></Label>
+                        </Toolbar>
+                    </headerToolbar>
+                    <columns>
+                        <Column width="12em">
+                            <Text text="Product" />
+                        </Column>
+                        <Column minScreenWidth="Tablet" demandPopin="true">
+                            <Text text="Supplier" />
+                        </Column>
+                        <Column minScreenWidth="Tablet" demandPopin="true" hAlign="Right">
+                            <Text text="Dimensions" />
+                        </Column>
+                        <Column hAlign="Right">
+                            <Text text="Price" />
+                        </Column>
+                    </columns>
+                    <items>
+                        <ColumnListItem>
+                            <cells>
+                                <ObjectIdentifier title="{Name}" text="{ProductId}" class="sapMTableContentMargin" />
+                                <Text text="{SupplierName}" />
+                                <Text text="{Width} x {Depth} x {Height} {DimUnit}" />
+                                <ObjectNumber number="{Price}" unit="{CurrencyCode}" />
+                            </cells>
+                        </ColumnListItem>
+                    </items>
+                </Table>
+            </mvc:View>
+
+        </script>
+
+        <script>
+var d1 = new $.Deferred();
+var url = "../../../sapui5-sdk-dist/test-resources/sap/ui/demokit/explored/products.json";
+var oModel = new sap.ui.model.json.JSONModel(url);
+oModel.attachRequestCompleted(function (oEvent) {
+    d1.resolve(oEvent.getSource().getData());
+});
+$.when(d1).done(function (data) {
+    jQuery.sap.require("sap.ui.thirdparty.handlebars");
+    Handlebars.registerHelper('dynamicFilter', function (data) {
+        debugger;
+        return data[1].Category;
+    });
+    var templateSrc = jQuery('#view1').html();
+    var template = Handlebars.compile(templateSrc);
+    var viewSrc = template(data);
+    sap.ui.controller("sap.m.sample.Table.Table", {
+        onInit: function () {
+            this.getView().setModel(oModel);
+        }
+    });
+    var myView = sap.ui.xmlview({
+        viewContent: viewSrc
+    });
+    myView.placeAt('content');
+});
+        </script>
+    </head>
+    <body class='sapUiBody'>
+        <div id='content'></div>
+    </body>
+</html>
